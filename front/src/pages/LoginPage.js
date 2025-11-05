@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import LogImage from "../Images/LogIn.jpg";
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -43,7 +44,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
       <Header />
-      <div className="flex w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden mx-auto my-12">
+  <div className="flex w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden mx-auto my-12">
         
         {/* Left column (form) */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
@@ -131,6 +132,7 @@ export default function LoginPage() {
           />
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

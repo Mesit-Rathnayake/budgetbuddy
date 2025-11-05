@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SignUpImage from "../Images/SignUp.jpg";
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function SignUpPage() {
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
@@ -39,7 +40,7 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
       <Header />
-      <div className="flex w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden mx-auto my-12">
+  <div className="flex w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden mx-auto my-12">
 
         {/* Left column (image) */}
         <div className="hidden md:flex w-1/2 bg-white p-4">
@@ -129,6 +130,7 @@ export default function SignUpPage() {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

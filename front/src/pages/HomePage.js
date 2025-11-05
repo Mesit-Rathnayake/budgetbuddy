@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function HomePage() {
   // Summary data; initial null while loading.
@@ -140,6 +141,7 @@ export default function HomePage() {
           )}
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

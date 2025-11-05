@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function SetGoalsPage() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export default function SetGoalsPage() {
           </form>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
