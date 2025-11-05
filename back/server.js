@@ -4,14 +4,19 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const summaryRoutes = require("./routes/summaryRoutes");
+const transactionRoutes = require("./routes/transactionRoutes");
+const settingsRoutes = require("./routes/settingsRoutes");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
 // Routes
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/summary", summaryRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Connect MongoDB
 const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/budget-tracker";
