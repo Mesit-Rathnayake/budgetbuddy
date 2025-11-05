@@ -2,7 +2,9 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-// Sign up
+const JWT_SECRET = process.env.JWT_SECRET || "secretKey";
+
+// Sign up - return token so client can be logged in immediately
 exports.signup = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
@@ -15,7 +17,10 @@ exports.signup = async (req, res) => {
     const user = new User({ fullName, email, password: hashedPassword });
     await user.save();
 
-    res.status(201).json({ message: "User registered successfully" });
+    // issue token on signup
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
+
+    res.status(201).json({ token, user: { id: user._id, fullName: user.fullName, email: user.email } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -33,7 +38,7 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     // JWT token
-    const token = jwt.sign({ id: user._id }, "secretKey", { expiresIn: "1h" });
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
     res.json({ token, user: { id: user._id, fullName: user.fullName, email: user.email } });
   } catch (err) {

@@ -18,20 +18,28 @@ export default function SignUpPage() {
     setSuccess("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/signup", {
+        const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.message || "Signup failed. Please try again.");
+          return;
+        }
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "Signup failed. Please try again.");
-        return;
-      }
+        // if backend returns token, save and redirect into app
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          setSuccess('🎉 Account created and logged in! Redirecting...');
+          setTimeout(() => navigate('/home'), 1200);
+          return;
+        }
 
-      setSuccess("🎉 Account created successfully! Redirecting to login...");
-      setTimeout(() => navigate("/login"), 1500);
+        setSuccess("🎉 Account created successfully! Redirecting to login...");
+        setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setError("Something went wrong. Please try again later.");
     }

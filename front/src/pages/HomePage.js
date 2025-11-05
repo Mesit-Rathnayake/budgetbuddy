@@ -8,6 +8,8 @@ export default function HomePage() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [recent, setRecent] = useState([]);
 
   const navigate = useNavigate();
 
@@ -48,6 +50,21 @@ export default function HomePage() {
 
         const data = await res.json();
         if (mounted) setSummary(data);
+        // attempt to load user & recent transactions if logged in
+        try {
+          const raw = localStorage.getItem('user');
+          if (raw) setUser(JSON.parse(raw));
+          const token = localStorage.getItem('token');
+          if (token) {
+            const r = await fetch('/api/transactions', { headers: { Authorization: `Bearer ${token}` } });
+            if (r.ok) {
+              const txs = await r.json();
+              if (mounted) setRecent(txs.slice(0, 5));
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
       } catch (err) {
         if (mounted) setError(err.message);
       } finally {
@@ -67,8 +84,11 @@ export default function HomePage() {
           <p className="text-lg text-center text-gray-600 max-w-2xl mx-auto">
             Take control of your finances with our simple and effective budget tracking tool.
           </p>
+          {user && (
+            <div className="text-center mt-3 text-sm text-gray-600">Welcome back, <strong>{user.fullName || user.email}</strong></div>
+          )}
         </div>
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center text-center">
             <div className="text-green-600 text-3xl mb-4">💰</div>
             <h3 className="font-semibold text-lg mb-2">Track Expenses</h3>
@@ -119,7 +139,7 @@ export default function HomePage() {
           {!loading && summary && (
             <>
               <div className="bg-white p-4 rounded-lg shadow-sm flex flex-col">
-                <div className="text-sm text-gray-500">This month</div>
+                <div className="text-sm text-gray-500">This month (expenses)</div>
                 <div className="text-2xl font-bold text-gray-800 mt-2">${summary.expensesThisMonth.toLocaleString()}</div>
                 <div className="text-xs text-gray-500 mt-1">Total expenses</div>
               </div>
@@ -138,6 +158,28 @@ export default function HomePage() {
                 <div className="text-xs text-gray-500 mt-1">{summary.achievedGoals} achieved</div>
               </div>
             </>
+          )}
+        </section>
+
+        {/* Recent transactions preview */}
+        <section className="mt-6 w-full max-w-4xl mx-auto">
+          <h2 className="text-lg font-semibold mb-3">Recent transactions</h2>
+          {recent.length === 0 ? (
+            <div className="text-gray-500">No recent transactions. Log in and add some!</div>
+          ) : (
+            <ul className="space-y-2">
+              {recent.map(tx => (
+                <li key={tx._id} className="flex justify-between items-center p-3 bg-white rounded shadow-sm">
+                  <div>
+                    <div className="font-medium">{tx.category} • {tx.note || ''}</div>
+                    <div className="text-sm text-gray-500">{new Date(tx.date).toLocaleDateString()}</div>
+                  </div>
+                  <div className={tx.type === 'income' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+                    {tx.type === 'income' ? `+${tx.amount}` : `-${tx.amount}`}
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       </main>

@@ -21,7 +21,8 @@ export default function SetGoalsPage() {
   const loadGoals = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/goals');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/goals', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Failed to load goals');
       const data = await res.json();
       setGoals(data || []);
@@ -39,10 +40,12 @@ export default function SetGoalsPage() {
     setError(null);
     if (!title || !targetAmount) return setError('Please provide a title and target amount');
     try {
+      const token = localStorage.getItem('token');
       const payload = { title, type, targetAmount: Number(targetAmount), category, dueDate: dueDate || null };
+      const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
       const res = editingId
-        ? await fetch(`/api/goals/${editingId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-        : await fetch('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        ? await fetch(`/api/goals/${editingId}`, { method: 'PUT', headers, body: JSON.stringify(payload) })
+        : await fetch('/api/goals', { method: 'POST', headers, body: JSON.stringify(payload) });
       if (!res.ok) throw new Error('Save failed');
       await loadGoals();
       resetForm();
@@ -65,7 +68,8 @@ export default function SetGoalsPage() {
   const deleteGoal = async (id) => {
     if (!window.confirm('Delete this goal?')) return;
     try {
-      const res = await fetch(`/api/goals/${id}`, { method: 'DELETE' });
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/goals/${id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Delete failed');
       setGoals(prev => prev.filter(g => g._id !== id));
     } catch (err) {

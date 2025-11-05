@@ -20,7 +20,8 @@ export default function VisualReportPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/transactions');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/transactions', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Failed to load transactions');
       const data = await res.json();
       setTransactions(data || []);

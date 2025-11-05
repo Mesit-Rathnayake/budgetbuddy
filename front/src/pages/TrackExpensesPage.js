@@ -33,7 +33,8 @@ export default function TrackExpensesPage() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/transactions');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/transactions', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Failed to load transactions');
       const data = await res.json();
       setTransactions(data);
@@ -47,7 +48,8 @@ export default function TrackExpensesPage() {
 
   const fetchCurrency = async () => {
     try {
-      const res = await fetch('/api/settings/currency');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/settings/currency', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) return;
       const data = await res.json();
       if (data && data.currency) setCurrency(data.currency);
@@ -60,9 +62,10 @@ export default function TrackExpensesPage() {
     setError(null);
     if (!amount || !category || !date) return setError('Please fill amount, category and date');
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/transactions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ type: txType, amount: Number(amount), category, date, note })
       });
       if (!res.ok) throw new Error('Add failed');
@@ -80,7 +83,8 @@ export default function TrackExpensesPage() {
 
   const deleteTransaction = async (id) => {
     try {
-      const res = await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/transactions/${id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Delete failed');
       setTransactions(prev => prev.filter(e => e._id !== id));
     } catch (err) {
@@ -92,9 +96,10 @@ export default function TrackExpensesPage() {
   const saveCurrency = async (newCurrency) => {
     setSavingCurrency(true);
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/settings/currency', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ currency: newCurrency })
       });
       if (!res.ok) throw new Error('Failed');
