@@ -63,7 +63,7 @@ export default function SetGoalsPage() {
   };
 
   const deleteGoal = async (id) => {
-    if (!confirm('Delete this goal?')) return;
+    if (!window.confirm('Delete this goal?')) return;
     try {
       const res = await fetch(`/api/goals/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
