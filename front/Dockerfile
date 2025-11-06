@@ -1,13 +1,19 @@
 # === Build stage ===
 FROM node:20-alpine AS build
 WORKDIR /usr/src/app
-ENV CI=true
+# Do not force CI=true here; set to false so local Docker builds do not treat
+# ESLint warnings as errors. CI environments can override this if needed.
+ENV CI=false
+# Increase Node's heap during build to avoid memory-related build failures
+# (useful when building inside constrained Docker environments).
+ENV NODE_OPTIONS=--max_old_space_size=4096
 
 # Copy dependency files first
 COPY package*.json ./
 
 # Install all dependencies (this installs react-scripts too)
-RUN npm install
+# Use `npm ci` for reproducible installs and prefer offline to reduce network flakiness.
+RUN npm ci --prefer-offline --no-audit --no-fund || npm install --no-audit --no-fund
 
 # Copy rest of app and build
 COPY . .

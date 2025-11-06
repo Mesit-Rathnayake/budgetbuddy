@@ -8,8 +8,11 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    # Use mongosh for MongoDB 6/7 images (they provide the modern shell `mongosh`).
+    # The old `mongo` shell may not be present in newer images which causes the
+    # original healthcheck to fail and the container to be marked unhealthy.
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand({ ping: 1 })"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -40,8 +43,11 @@ services:
       context: ./front
       dockerfile: Dockerfile
     container_name: myapp-frontend
+    # Bind the frontend container's port 80 to a host port. Use FRONTEND_PORT
+    # environment variable to avoid conflicts with other services (e.g. Jenkins
+    # on 8080). Default to 8081 if FRONTEND_PORT is not set.
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-8081}:80"
     environment:
       REACT_APP_BACKEND_URL: http://backend:5000
     restart: unless-stopped
