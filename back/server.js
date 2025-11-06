@@ -20,6 +20,9 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/goals", goalRoutes);
 
+// Basic health endpoint for orchestration healthchecks
+app.get('/api/health', (req, res) => res.sendStatus(200));
+
 // Connect MongoDB
 const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/budget-tracker";
 
