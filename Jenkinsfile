@@ -5,19 +5,19 @@ pipeline {
         stage('Cleanup Old Containers') {
             steps {
                 echo "🧹 Cleaning old containers..."
-                sh 'docker compose down || true'
+                sh 'docker compose -f docker-compose.ci.yml down || true'
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                sh 'docker compose build'
+                sh 'docker compose -f docker-compose.ci.yml build'
             }
         }
 
         stage('Run Containers') {
             steps {
-                sh 'docker compose up -d'
+                sh 'docker compose -f docker-compose.ci.yml up -d'
             }
         }
 
@@ -30,7 +30,7 @@ pipeline {
 
     post {
         always {
-            echo "Pipeline finished!"
+            echo "✅ Pipeline finished!"
         }
     }
 }
