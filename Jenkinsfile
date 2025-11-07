@@ -1,54 +1,36 @@
 pipeline {
     agent any
 
-    environment {
-        COMPOSE_FILE = 'docker-compose.yml'
-        PROJECT_NAME = 'budgetbuddy'
-    }
-
     stages {
-
-        stage('Checkout') {
+        stage('Cleanup Old Containers') {
             steps {
-                git branch: 'main', url: 'https://github.com/Mesit-Rathnayake/budgetbuddy.git'
+                echo "🧹 Cleaning old containers..."
+                sh 'docker compose down || true'
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                echo 'Building Docker images...'
-                sh 'docker compose -f ${COMPOSE_FILE} build'
+                sh 'docker compose build'
             }
         }
 
-        stage('Deploy to Server') {
+        stage('Run Containers') {
             steps {
-                echo 'Deploying containers...'
-                // Stop any old containers (if exist)
-                sh 'docker compose -f ${COMPOSE_FILE} down || true'
-                // Start everything fresh
-                sh 'docker compose -f ${COMPOSE_FILE} up -d'
+                sh 'docker compose up -d'
             }
         }
 
-        stage('Health Check') {
+        stage('Check Running Containers') {
             steps {
-                script {
-                    echo 'Checking app health...'
-                    // Simple check: wait a few seconds and ensure containers are up
-                    sh 'sleep 10'
-                    sh 'docker ps'
-                }
+                sh 'docker ps'
             }
         }
     }
 
     post {
-        success {
-            echo '✅ Deployment successful! Your app is live and running.'
-        }
-        failure {
-            echo '❌ Deployment failed. Please check Jenkins logs for details.'
+        always {
+            echo "Pipeline finished!"
         }
     }
 }
