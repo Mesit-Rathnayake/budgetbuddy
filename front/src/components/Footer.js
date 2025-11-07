@@ -34,7 +34,7 @@ export default function Footer() {
               <Github size={18} />
             </a>
             <a
-              href="https://www.linkedin.com/in/mesith-rathnayake"
+              href="https://www.linkedin.com/in/Mesith-Rathnayake"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-500 hover:text-indigo-600 transition-transform transform hover:scale-110"
