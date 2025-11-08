@@ -21,6 +21,7 @@ RUN npm run build
 
 # === Production stage - serve with nginx ===
 FROM nginx:stable-alpine
+RUN apk add --no-cache wget ca-certificates
 COPY --from=build /usr/src/app/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
