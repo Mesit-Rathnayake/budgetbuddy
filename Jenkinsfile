@@ -1,41 +1,24 @@
 pipeline {
     agent any
 
-    environment {
-        NPM_REGISTRY = "https://registry.npmjs.org/"
-    }
-
     stages {
-        stage('Cleanup Old Containers') {
+        stage('Checkout SCM') {
             steps {
-                echo "🧹 Cleaning old containers..."
-                // Stop and remove old containers, ignore errors
-                sh 'docker compose down || true'
+                checkout scm
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build Backend') {
             steps {
-                echo "🛠 Building Docker images..."
-                // Build images with no-cache and npm registry set
-                sh """
-                    docker compose build --no-cache \
-                    --build-arg NPM_CONFIG_REGISTRY=${NPM_REGISTRY}
-                """
+                echo "🛠 Building backend Docker image..."
+                sh 'docker build -t budgetbuddy-backend ./backend'
             }
         }
 
-        stage('Run Containers') {
+        stage('Run Backend') {
             steps {
-                echo "🚀 Starting containers..."
-                sh 'docker compose up -d'
-            }
-        }
-
-        stage('Check Running Containers') {
-            steps {
-                echo "📊 Checking running containers..."
-                sh 'docker ps'
+                echo "▶️ Running backend container..."
+                sh 'docker compose up -d backend'
             }
         }
     }
@@ -44,11 +27,8 @@ pipeline {
         always {
             echo "✅ Pipeline finished!"
         }
-        success {
-            echo "🎉 All stages completed successfully!"
-        }
         failure {
-            echo "❌ Pipeline failed. Check logs for errors."
+            echo "❌ Pipeline failed."
         }
     }
 }

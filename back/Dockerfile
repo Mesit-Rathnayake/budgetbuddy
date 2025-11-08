@@ -1,20 +1,30 @@
+# Use lightweight Node image
 FROM node:20-alpine
 
+# Set working directory
 WORKDIR /usr/src/app
 
+# Copy package files
 COPY package*.json ./
-RUN npm install --production && \
-  addgroup -S appgroup && adduser -S appuser -G appgroup
 
+# Optional: Add .npmrc to force registry usage
+COPY .npmrc ./
+
+# Install dependencies with retry (handles network issues)
+RUN n=0; until [ $n -ge 5 ]; do \
+      npm install --production --registry=https://registry.npmjs.org/ && break; \
+      n=$((n+1)); echo "Retry $n..."; sleep 5; \
+    done && \
+    addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy the rest of the source code
 COPY . .
-RUN chown -R appuser:appgroup /usr/src/app
 
+# Use non-root user
 USER appuser
 
-EXPOSE 5000
-ENV NODE_ENV=production
+# Expose backend port (change if different)
+EXPOSE 3001
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -q --spider http://localhost:5000/api/health || exit 1
-
+# Start command
 CMD ["node", "server.js"]
