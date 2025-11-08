@@ -2,51 +2,31 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout Code') {
+        stage('Cleanup Old Containers') {
             steps {
-                echo "📥 Checking out code..."
-                checkout scm
+                echo "🧹 Cleaning old containers..."
+                sh 'docker compose down || true'
             }
         }
 
         stage('Build Docker Images') {
             steps {
                 echo "🛠 Building Docker images..."
-                sh 'docker compose build --no-cache'
+                // Use host network to fix npm network issues
+                sh 'docker compose build --no-cache --build-arg NPM_CONFIG_REGISTRY=https://registry.npmjs.org/ --network=host'
             }
         }
 
         stage('Run Containers') {
             steps {
                 echo "🚀 Running containers..."
-                // Run in detached mode with forced recreation
-                sh 'docker compose up -d --force-recreate'
-            }
-        }
-
-        stage('Wait for Services') {
-            steps {
-                echo "⏳ Waiting for containers to become healthy..."
-                // Wait for MongoDB
-                sh '''
-                until [ "$(docker inspect -f '{{.State.Health.Status}}' myapp-mongo)" = "healthy" ]; do
-                  echo "Waiting for MongoDB..."
-                  sleep 5
-                done
-                '''
-
-                // Wait for Backend
-                sh '''
-                until [ "$(docker inspect -f '{{.State.Health.Status}}' myapp-backend)" = "healthy" ]; do
-                  echo "Waiting for Backend..."
-                  sleep 5
-                done
-                '''
+                sh 'docker compose up -d'
             }
         }
 
         stage('Check Running Containers') {
             steps {
+                echo "📦 Checking running containers..."
                 sh 'docker ps'
             }
         }
