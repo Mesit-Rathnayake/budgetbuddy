@@ -2,33 +2,35 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout SCM') {
+        stage('Cleanup Old Containers') {
             steps {
-                checkout scm
+                echo "🧹 Cleaning old containers..."
+                sh 'docker compose down || true'
             }
         }
 
-        stage('Build Backend') {
+        stage('Build Docker Images') {
             steps {
-                echo "🛠 Building backend Docker image..."
-                sh 'docker build -t budgetbuddy-backend ./backend'
+                sh 'docker compose build'
             }
         }
 
-        stage('Run Backend') {
+        stage('Run Containers') {
             steps {
-                echo "▶️ Running backend container..."
-                sh 'docker compose up -d backend'
+                sh 'docker compose up -d'
+            }
+        }
+
+        stage('Check Running Containers') {
+            steps {
+                sh 'docker ps'
             }
         }
     }
 
     post {
         always {
-            echo "✅ Pipeline finished!"
-        }
-        failure {
-            echo "❌ Pipeline failed."
+            echo "Pipeline finished!"
         }
     }
 }
