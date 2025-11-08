@@ -11,10 +11,16 @@ RUN apk add --no-cache ca-certificates wget \
 # Copy package files and install dependencies (use npm ci when lockfile present)
 # Use --chown to avoid an extra chown layer later.
 COPY --chown=root:root package*.json ./
+# Make npm installs more resilient to transient network issues during docker build
+# by increasing fetch timeouts/retries and preferring cached packages when possible.
+ENV NPM_CONFIG_FETCH_RETRIES=5 \
+    NPM_CONFIG_FETCH_RETRY_FACTOR=10 \
+    NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=1000 \
+    NPM_CONFIG_FETCH_TIMEOUT=120000
 RUN if [ -f package-lock.json ]; then \
-      npm ci --omit=dev --no-audit --no-fund; \
+      npm ci --prefer-offline --omit=dev --no-audit --no-fund; \
     else \
-      npm install --production --no-audit --no-fund; \
+      npm install --prefer-offline --production --no-audit --no-fund; \
     fi
 
 # Copy app source (owned by root) and then switch to appuser for runtime
