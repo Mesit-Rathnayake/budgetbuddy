@@ -13,7 +13,7 @@ export default function Footer() {
 
         {/* Right Side */}
         <div className="flex items-center gap-3 mt-3 sm:mt-0">
-          <span className="text-gray-500">Developed by: </span>
+          <span className="text-gray-500">Developed by : </span>
           <a
             href="https://github.com/MesithRathnayake"
             target="_blank"
