@@ -42,5 +42,5 @@ jobs:
 
       - name: Rebuild containers with latest code
         run: |
-          ssh -i ~/.ssh/budgetbuddy-key.pem -o StrictHostKeyChecking=no ec2-user@43.204.236.63 \
+          ssh -i ~/.ssh/budgetbuddy-key.pem -o StrictHostKeyChecking=no ec2-user@52.66.248.9 \
             "cd /opt/budgetbuddy && docker-compose down && docker-compose up -d --build"
