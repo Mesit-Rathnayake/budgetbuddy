@@ -2,6 +2,7 @@
 - name: Deploy and Configure BudgetBuddy Application
   hosts: budgetbuddy
   become: yes
+  gather_facts: false
   vars:
     app_directory: /opt/budgetbuddy
     git_repo: https://github.com/Mesit-Rathnayake/budgetbuddy.git
@@ -10,6 +11,17 @@
     backend_port: 5000
     mongodb_port: 27017
     compose_cmd: /usr/local/bin/docker-compose
+
+  pre_tasks:
+    - name: Ensure Python 3 is installed (bootstrap for facts)
+      raw: |
+        if [ ! -x /usr/bin/python3 ]; then
+          sudo yum install -y python3
+        fi
+      changed_when: false
+
+    - name: Gather facts
+      setup:
 
   tasks:
     - name: Update system packages
