@@ -32,8 +32,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/budgetbuddy-key.pem
           chmod 600 ~/.ssh/budgetbuddy-key.pem
+          ln -sf ~/.ssh/budgetbuddy-key.pem ~/budgetbuddy-key.pem
 
       - name: Run Ansible deployment
+        env:
+          ANSIBLE_PRIVATE_KEY_FILE: /home/runner/.ssh/budgetbuddy-key.pem
         run: |
           ansible-playbook -i ansible/inventory.ini ansible/deploy.yml
 
