@@ -5,7 +5,11 @@ pipeline {
         stage('Cleanup Old Containers') {
             steps {
                 echo "🧹 Cleaning old containers..."
-                sh 'docker compose down || true'
+                sh '''
+                    docker compose down --volumes --remove-orphans || true
+                    docker rm -f myapp-mongo myapp-backend myapp-frontend 2>/dev/null || true
+                    docker volume prune -f || true
+                '''
             }
         }
 
