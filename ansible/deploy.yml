@@ -4,19 +4,27 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: Install Python 3.8 from Amazon Linux Extras
+    - name: Install Python 3.9 from source
       raw: |
-        sudo amazon-linux-extras enable python3.8
-        sudo yum install -y python38 python38-pip python38-setuptools python38-libs libselinux-python
+        if [ ! -f /usr/local/bin/python3.9 ]; then
+          sudo yum install -y gcc openssl-devel bzip2-devel libffi-devel zlib-devel wget make
+          cd /tmp
+          wget https://www.python.org/ftp/python/3.9.18/Python-3.9.18.tgz
+          tar xzf Python-3.9.18.tgz
+          cd Python-3.9.18
+          ./configure --enable-optimizations --prefix=/usr/local
+          make altinstall
+          ln -sf /usr/local/bin/python3.9 /usr/bin/python3.9
+          ln -sf /usr/local/bin/pip3.9 /usr/bin/pip3.9
+        fi
       changed_when: false
-      ignore_errors: yes
 
 - name: Deploy and Configure BudgetBuddy Application
   hosts: budgetbuddy
   become: yes
   gather_facts: yes
   vars:
-    ansible_python_interpreter: /usr/bin/python3.8
+    ansible_python_interpreter: /usr/local/bin/python3.9
     app_directory: /opt/budgetbuddy
     git_repo: https://github.com/Mesit-Rathnayake/budgetbuddy.git
     jwt_secret: "{{ lookup('env', 'JWT_SECRET') | default('change-me-in-production', true) }}"
