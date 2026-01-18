@@ -125,13 +125,11 @@ resource "aws_instance" "budgetbuddy_server" {
 
   user_data = <<-EOF
               #!/bin/bash
-              set -e
-              
               # Update system
               sudo yum update -y
               
               # Install Docker
-              sudo yum install -y docker
+              sudo yum install -y docker git python3 python3-pip
               sudo systemctl start docker
               sudo systemctl enable docker
               sudo usermod -aG docker ec2-user
@@ -139,82 +137,6 @@ resource "aws_instance" "budgetbuddy_server" {
               # Install Docker Compose
               sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
-              
-              # Install Git
-              sudo yum install -y git
-              
-              # Create app directory
-              sudo mkdir -p /opt/budgetbuddy
-              cd /opt/budgetbuddy
-              
-              # Clone the repository
-              sudo git clone https://github.com/Mesit-Rathnayake/budgetbuddy.git .
-              
-              # Set environment variables
-              echo "JWT_SECRET=your-super-secret-jwt-key-change-this" | sudo tee .env
-              echo "FRONTEND_PORT=8081" | sudo tee -a .env
-              
-              # Start the application
-              sudo docker-compose up -d
-              
-              # Setup systemd service for auto-start
-              sudo cat > /etc/systemd/system/budgetbuddy.service <<SERVICE
-              [Unit]
-              Description=BudgetBuddy Application
-              Requires=docker.service
-              After=docker.service
-              
-              [Service]
-              Type=oneshot
-              RemainAfterExit=yes
-              WorkingDirectory=/opt/budgetbuddy
-              ExecStart=/usr/local/bin/docker-compose up -d
-              ExecStop=/usr/local/bin/docker-compose down
-              
-              [Install]
-              WantedBy=multi-user.target
-              SERVICE
-              
-              sudo systemctl enable budgetbuddy.service
-              
-              # Create status page
-              sudo mkdir -p /var/www/html
-              sudo cat > /var/www/html/status.html <<HTML
-              <!DOCTYPE html>
-              <html>
-              <head>
-                  <title>BudgetBuddy Server Status</title>
-                  <style>
-                      body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; }
-                      .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                      h1 { color: #2c3e50; }
-                      .status { padding: 15px; margin: 10px 0; border-radius: 5px; }
-                      .running { background: #d4edda; color: #155724; }
-                      a { color: #007bff; text-decoration: none; }
-                  </style>
-              </head>
-              <body>
-                  <div class="container">
-                      <h1>🚀 BudgetBuddy Deployment Status</h1>
-                      <div class="status running">
-                          ✅ Server is running and configured
-                      </div>
-                      <h2>Access Points:</h2>
-                      <ul>
-                          <li><a href="http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8081" target="_blank">Frontend Application (Port 8081)</a></li>
-                          <li><a href="http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):5000/api/health" target="_blank">Backend API Health (Port 5000)</a></li>
-                      </ul>
-                      <p><strong>Deployed by:</strong> Mesith using Terraform</p>
-                      <p><strong>Deployment Date:</strong> $(date)</p>
-                  </div>
-              </body>
-              </html>
-              HTML
-              
-              # Install and configure nginx for status page
-              sudo yum install -y nginx
-              sudo systemctl start nginx
-              sudo systemctl enable nginx
               EOF
 
   tags = {
