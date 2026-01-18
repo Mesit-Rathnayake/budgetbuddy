@@ -1,0 +1,136 @@
+---
+- name: Deploy and Configure BudgetBuddy Application
+  hosts: budgetbuddy
+  become: yes
+  vars:
+    app_directory: /opt/budgetbuddy
+    git_repo: https://github.com/Mesit-Rathnayake/budgetbuddy.git
+    jwt_secret: "{{ lookup('env', 'JWT_SECRET') | default('change-me-in-production', true) }}"
+    frontend_port: 8081
+    backend_port: 5000
+    mongodb_port: 27017
+
+  tasks:
+    - name: Update system packages
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+
+    - name: Install required packages
+      yum:
+        name:
+          - docker
+          - git
+          - python3
+          - python3-pip
+        state: present
+
+    - name: Install Docker SDK for Python
+      pip:
+        name:
+          - docker
+          - docker-compose
+        executable: pip3
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    - name: Install Docker Compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Create application directory
+      file:
+        path: "{{ app_directory }}"
+        state: directory
+        mode: '0755'
+
+    - name: Clone or update repository
+      git:
+        repo: "{{ git_repo }}"
+        dest: "{{ app_directory }}"
+        version: main
+        force: yes
+      notify: Restart application
+
+    - name: Create .env file
+      template:
+        src: templates/env.j2
+        dest: "{{ app_directory }}/.env"
+        mode: '0600'
+      notify: Restart application
+
+    - name: Stop existing containers
+      community.docker.docker_compose:
+        project_src: "{{ app_directory }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Start Docker Compose services
+      community.docker.docker_compose:
+        project_src: "{{ app_directory }}"
+        state: present
+        pull: yes
+      register: docker_output
+
+    - name: Display Docker Compose output
+      debug:
+        var: docker_output
+
+    - name: Wait for backend to be ready
+      uri:
+        url: "http://localhost:{{ backend_port }}/api/health"
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 30
+      delay: 10
+      ignore_errors: yes
+
+    - name: Create systemd service for BudgetBuddy
+      template:
+        src: templates/budgetbuddy.service.j2
+        dest: /etc/systemd/system/budgetbuddy.service
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Enable BudgetBuddy service
+      systemd:
+        name: budgetbuddy
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Configure firewall (if firewalld is installed)
+      firewalld:
+        port: "{{ item }}/tcp"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop:
+        - "{{ frontend_port }}"
+        - "{{ backend_port }}"
+      when: ansible_facts.services['firewalld.service'] is defined
+      ignore_errors: yes
+
+  handlers:
+    - name: Restart application
+      community.docker.docker_compose:
+        project_src: "{{ app_directory }}"
+        state: present
+        restarted: yes
+
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes

@@ -1,0 +1,62 @@
+---
+- name: Health Check BudgetBuddy Application
+  hosts: budgetbuddy
+  gather_facts: yes
+
+  tasks:
+    - name: Check if Docker is running
+      systemd:
+        name: docker
+      register: docker_status
+
+    - name: Display Docker status
+      debug:
+        msg: "Docker service is {{ docker_status.status.ActiveState }}"
+
+    - name: Get running Docker containers
+      command: docker ps --format "table {% raw %}{{.Names}}\t{{.Status}}\t{{.Ports}}{% endraw %}"
+      register: containers
+      changed_when: false
+
+    - name: Display running containers
+      debug:
+        var: containers.stdout_lines
+
+    - name: Check backend health
+      uri:
+        url: "http://{{ ansible_default_ipv4.address }}:5000/api/health"
+        status_code: 200
+      register: backend_health
+      ignore_errors: yes
+
+    - name: Display backend health status
+      debug:
+        msg: "Backend API is {{ 'UP' if backend_health.status == 200 else 'DOWN' }}"
+
+    - name: Check frontend accessibility
+      uri:
+        url: "http://{{ ansible_default_ipv4.address }}:8081"
+        status_code: 200
+      register: frontend_health
+      ignore_errors: yes
+
+    - name: Display frontend health status
+      debug:
+        msg: "Frontend is {{ 'UP' if frontend_health.status == 200 else 'DOWN' }}"
+
+    - name: Get system resources
+      shell: |
+        echo "CPU Usage:"
+        top -bn1 | grep "Cpu(s)"
+        echo ""
+        echo "Memory Usage:"
+        free -h
+        echo ""
+        echo "Disk Usage:"
+        df -h /
+      register: resources
+      changed_when: false
+
+    - name: Display system resources
+      debug:
+        var: resources.stdout_lines

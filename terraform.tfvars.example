@@ -1,0 +1,13 @@
+# AWS Configuration
+aws_region = "ap-south-1"
+
+# EC2 Configuration
+instance_type = "t2.micro"
+
+# SSH Key Configuration (Optional - create one in AWS EC2 console first)
+# key_name = "your-key-name"
+
+# Security Configuration
+# Restrict SSH access to your IP for better security
+# allowed_ssh_cidr = ["YOUR_IP/32"]
+allowed_ssh_cidr = ["0.0.0.0/0"]
