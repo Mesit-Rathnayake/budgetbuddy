@@ -9,6 +9,7 @@
     frontend_port: 8081
     backend_port: 5000
     mongodb_port: 27017
+    compose_cmd: /usr/local/bin/docker-compose
 
   tasks:
     - name: Update system packages
@@ -26,11 +27,16 @@
           - python3-pip
         state: present
 
-    - name: Install Docker SDK for Python
+    - name: Install Docker SDK for Python (no compose)
       pip:
         name:
           - docker
-          - docker-compose
+        executable: pip3
+
+    - name: Remove any pip-installed docker-compose
+      pip:
+        name: docker-compose
+        state: absent
         executable: pip3
 
     - name: Start and enable Docker service
@@ -45,11 +51,12 @@
         groups: docker
         append: yes
 
-    - name: Install Docker Compose
+    - name: Install Docker Compose binary (pinned)
       get_url:
-        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        url: "https://github.com/docker/compose/releases/download/v2.24.7/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
         dest: /usr/local/bin/docker-compose
         mode: '0755'
+        force: yes
 
     - name: Create application directory
       file:
@@ -73,16 +80,11 @@
       notify: Restart application
 
     - name: Stop existing containers
-      community.docker.docker_compose:
-        project_src: "{{ app_directory }}"
-        state: absent
+      shell: cd "{{ app_directory }}" && {{ compose_cmd }} down
       ignore_errors: yes
 
     - name: Start Docker Compose services
-      community.docker.docker_compose:
-        project_src: "{{ app_directory }}"
-        state: present
-        pull: yes
+      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d
       register: docker_output
 
     - name: Display Docker Compose output
@@ -112,24 +114,9 @@
         enabled: yes
         daemon_reload: yes
 
-    - name: Configure firewall (if firewalld is installed)
-      firewalld:
-        port: "{{ item }}/tcp"
-        permanent: yes
-        state: enabled
-        immediate: yes
-      loop:
-        - "{{ frontend_port }}"
-        - "{{ backend_port }}"
-      when: ansible_facts.services['firewalld.service'] is defined
-      ignore_errors: yes
-
   handlers:
     - name: Restart application
-      community.docker.docker_compose:
-        project_src: "{{ app_directory }}"
-        state: present
-        restarted: yes
+      shell: cd "{{ app_directory }}" && {{ compose_cmd }} restart
 
     - name: Reload systemd
       systemd:

@@ -118,7 +118,7 @@ export default function HomePage() {
                 <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
                   <Wallet className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-lg font-semibold">T Expenses</div>
+                <div className="text-lg font-semibold">Track Expenses</div>
                 <div className="text-sm text-indigo-100">Quickly add income & expenses</div>
               </button>
 
