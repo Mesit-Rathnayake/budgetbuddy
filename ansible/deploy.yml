@@ -4,12 +4,12 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: Install Python 3.9 from Amazon Linux Extras
+    - name: Install Python 3.8 from Amazon Linux Extras
       raw: |
         sudo amazon-linux-extras enable python3.8
-        sudo yum install -y python38 python38-pip python38-setuptools
-        sudo alternatives --set python3 /usr/bin/python3.8
+        sudo yum install -y python38 python38-pip python38-setuptools python38-libs libselinux-python
       changed_when: false
+      ignore_errors: yes
 
 - name: Deploy and Configure BudgetBuddy Application
   hosts: budgetbuddy
