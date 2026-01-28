@@ -197,7 +197,7 @@ This document provides a comprehensive breakdown of the BudgetBuddy application 
 - **AMI:** Amazon Linux 2 (latest)
 - **Region:** ap-south-1 (Mumbai)
 - **Instance ID:** i-09c75b907ffc0da58
-- **Public IP:** 52.66.248.9 (dynamic)
+- **Public IP:** 13.233.14.231 (dynamic)
 
 ##### Networking and Security
 - **Security Group ID:** sg-0db756b90b8143bd1
@@ -396,7 +396,7 @@ ansible-playbook -i ansible/inventory.ini ansible/deploy.yml
 ##### Stage 7: Container Rebuild
 **Command:**
 ```bash
-ssh -i ~/.ssh/budgetbuddy-key.pem -o StrictHostKeyChecking=no ec2-user@52.66.248.9 \
+ssh -i ~/.ssh/budgetbuddy-key.pem -o StrictHostKeyChecking=no ec2-user@13.233.14.231 \
   "cd /opt/budgetbuddy && docker-compose down && docker-compose up -d --build"
 ```
 **Purpose:** Ensure containers use latest code changes
@@ -419,9 +419,9 @@ ssh -i ~/.ssh/budgetbuddy-key.pem -o StrictHostKeyChecking=no ec2-user@52.66.248
 ### 7. Production Environment
 
 #### Application URL Structure
-- **Frontend:** http://52.66.248.9:8081
-- **Backend API:** http://52.66.248.9:5000
-- **Health Check:** http://52.66.248.9:5000/api/health
+- **Frontend:** http://13.233.14.231:8081
+- **Backend API:** http://13.233.14.231:5000
+- **Health Check:** http://13.233.14.231:5000/api/health
 - **Database:** Internal (mongo:27017 via Docker network)
 
 #### Service Architecture
@@ -429,7 +429,7 @@ ssh -i ~/.ssh/budgetbuddy-key.pem -o StrictHostKeyChecking=no ec2-user@52.66.248
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     AWS EC2 Instance                     │
-│                  (52.66.248.9:t2.micro)                  │
+│                  (13.233.14.231:t2.micro)                │
 │                                                          │
 │  ┌────────────────────────────────────────────────┐    │
 │  │           Docker Compose Network               │    │
@@ -460,9 +460,9 @@ Frontend → Backend → MongoDB
 ```
 
 #### Data Flow
-1. User accesses `http://52.66.248.9:8081` (Frontend)
+1. User accesses `http://13.233.14.231:8081` (Frontend)
 2. React application loads in browser
-3. Frontend makes API calls to `http://52.66.248.9:5000` (Backend)
+3. Frontend makes API calls to `http://13.233.14.231:5000` (Backend)
 4. Backend processes requests and queries MongoDB
 5. Data returned through API to Frontend
 6. Frontend displays data to user
@@ -645,8 +645,8 @@ curl http://localhost:8081
 ┌─────────────────────────────────────────────────────────────┐
 │ Phase 7: Production Deployment                              │
 │ ┌──────────────────────────────────────────────────┐       │
-│ │ Application Live at http://52.66.248.9:8081      │       │
-│ │ API Available at http://52.66.248.9:5000         │       │
+│ │ Application Live at http://13.233.14.231:8081    │       │
+│ │ API Available at http://13.233.14.231:5000       │       │
 │ │ Containers: Frontend + Backend + MongoDB         │       │
 │ │ Auto-restart: Systemd service enabled            │       │
 │ └──────────────────────────────────────────────────┘       │
@@ -739,6 +739,6 @@ This project demonstrates a complete DevOps workflow implementing:
 ---
 
 **Project Repository:** https://github.com/Mesit-Rathnayake/budgetbuddy  
-**Production URL:** http://52.66.248.9:8081  
+**Production URL:** http://13.233.14.231:8081  
 **Documentation Version:** 1.0  
 **Last Updated:** January 2026

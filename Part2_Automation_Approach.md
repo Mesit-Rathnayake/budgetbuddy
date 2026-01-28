@@ -179,8 +179,8 @@ The BudgetBuddy application deployment follows a fully automated approach using 
 
 #### **Stage 7: Service Verification**
 - **Automatic Checks:**
-  1. Frontend accessible at `http://52.66.248.9:8081`
-  2. Backend API responding at `http://52.66.248.9:5000/api/health`
+  1. Frontend accessible at `http://13.233.14.231:8081`
+  2. Backend API responding at `http://13.233.14.231:5000/api/health`
   3. MongoDB accepting connections on port 27017
   4. Container health checks passing (configured in docker-compose.yml)
 - **Manual Verification:** Developers can access the application via browser and test functionality
@@ -252,8 +252,8 @@ Verification:
 
 ## 4. Deployment Environment Details
 
-- **Production URL:** http://52.66.248.9:8081
-- **API Endpoint:** http://52.66.248.9:5000
+- **Production URL:** http://13.233.14.231:8081
+- **API Endpoint:** http://13.233.14.231:5000
 - **EC2 Instance ID:** i-09c75b907ffc0da58
 - **Security Group:** sg-0db756b90b8143bd1
 - **GitHub Repository:** github.com/Mesit-Rathnayake/budgetbuddy
