@@ -4,19 +4,24 @@
   become: yes
   gather_facts: no
   tasks:
+    - name: Check if Python 3.9 exists
+      raw: test -f /usr/local/bin/python3.9
+      register: python_exists
+      ignore_errors: yes
+      changed_when: false
+
     - name: Install Python 3.9 from source
       raw: |
-        if [ ! -f /usr/local/bin/python3.9 ]; then
-          sudo yum install -y gcc openssl-devel bzip2-devel libffi-devel zlib-devel wget make
-          cd /tmp
-          wget https://www.python.org/ftp/python/3.9.18/Python-3.9.18.tgz
-          tar xzf Python-3.9.18.tgz
-          cd Python-3.9.18
-          ./configure --enable-optimizations --prefix=/usr/local
-          make altinstall
-          ln -sf /usr/local/bin/python3.9 /usr/bin/python3.9
-          ln -sf /usr/local/bin/pip3.9 /usr/bin/pip3.9
-        fi
+        sudo yum install -y gcc openssl-devel bzip2-devel libffi-devel zlib-devel wget make
+        cd /tmp
+        wget https://www.python.org/ftp/python/3.9.18/Python-3.9.18.tgz
+        tar xzf Python-3.9.18.tgz
+        cd Python-3.9.18
+        ./configure --enable-optimizations --prefix=/usr/local
+        make altinstall
+        ln -sf /usr/local/bin/python3.9 /usr/bin/python3.9
+        ln -sf /usr/local/bin/pip3.9 /usr/bin/pip3.9
+      when: python_exists.rc != 0
       changed_when: false
 
 - name: Deploy and Configure BudgetBuddy Application
@@ -34,10 +39,9 @@
     compose_cmd: /usr/local/bin/docker-compose
 
   tasks:
-    - name: Update system packages
-      raw: sudo yum update -y
-      changed_when: false
-
+    # Skipping yum update for faster deployment
+    # Run manually if security updates needed: sudo yum update -y
+    
     - name: Install required packages
       raw: sudo yum install -y docker git
       changed_when: false
@@ -112,8 +116,8 @@
         status_code: 200
       register: result
       until: result.status == 200
-      retries: 30
-      delay: 10
+      retries: 20
+      delay: 6
       ignore_errors: yes
 
     - name: Create systemd service for BudgetBuddy
