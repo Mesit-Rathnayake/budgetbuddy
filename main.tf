@@ -27,7 +27,7 @@ variable "allowed_ssh_cidr" {
 
 # Security Group
 resource "aws_security_group" "budgetbuddy_sg" {
-  name        = "budgetbuddy-sg"
+  name_prefix = "budgetbuddy-sg-"
   description = "Security group for BudgetBuddy application"
 
   # SSH access
