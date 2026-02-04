@@ -2,8 +2,8 @@
 
 A comprehensive DevOps implementation demonstrating CI/CD pipelines, Infrastructure as Code, configuration management, and containerization for a full-stack budget tracking application.
 
-**Live Application:** http://43.204.37.235:8081  
-**API Endpoint:** http://43.204.37.235:5000
+**Live Application:** http://15.206.124.163:8081  
+**API Endpoint:** http://15.206.124.163:5000
 
 ---
 
@@ -85,7 +85,7 @@ BudgetBuddy is a personal finance tracking application built to demonstrate mode
               │ SSH Connection
               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│            AWS EC2 Instance (43.204.37.235)                │
+│            AWS EC2 Instance (15.206.124.163)                │
 │                    t2.micro - Amazon Linux 2                │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │         Docker Compose Environment                    │  │
@@ -325,8 +325,8 @@ Verify deployment
 
 ### Health Check Endpoints
 
-- **Backend Health:** http://43.204.37.235:5000/api/health
-- **Frontend:** http://43.204.37.235:8081
+- **Backend Health:** http://15.206.124.163:5000/api/health
+- **Frontend:** http://15.206.124.163:8081
 
 ### Container Health Checks
 
@@ -384,7 +384,7 @@ NODE_ENV=production
 PORT=5000
 
 # Frontend
-REACT_APP_BACKEND_URL=http://43.204.37.235:5000
+REACT_APP_BACKEND_URL=http://15.206.124.163:5000
 FRONTEND_PORT=8081
 ```
 

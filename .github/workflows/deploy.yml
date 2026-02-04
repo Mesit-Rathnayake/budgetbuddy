@@ -39,7 +39,7 @@ jobs:
           max_attempts=30
           attempt=1
           while [ $attempt -le $max_attempts ]; do
-            if ssh -i ~/.ssh/budgetbuddy-key.pem -o ConnectTimeout=5 -o StrictHostKeyChecking=no ec2-user@43.204.37.235 "exit" 2>/dev/null; then
+            if ssh -i ~/.ssh/budgetbuddy-key.pem -o ConnectTimeout=5 -o StrictHostKeyChecking=no ec2-user@15.206.124.163 "exit" 2>/dev/null; then
               echo "Instance is ready!"
               exit 0
             fi
