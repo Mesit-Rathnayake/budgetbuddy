@@ -29,6 +29,8 @@
   become: yes
   gather_facts: yes
   vars:
+    ansible_ssh_common_args: '-o ServerAliveInterval=60 -o ServerAliveCountMax=10'
+  vars:
     ansible_python_interpreter: /usr/local/bin/python3.9
     app_directory: /opt/budgetbuddy
     git_repo: https://github.com/Mesit-Rathnayake/budgetbuddy.git
@@ -105,6 +107,9 @@
     - name: Start Docker Compose services
       shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d --build
       register: docker_output
+      timeout: 1200
+      async: 1200
+      poll: 30
 
     - name: Display Docker Compose output
       debug:
