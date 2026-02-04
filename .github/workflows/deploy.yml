@@ -34,13 +34,29 @@ jobs:
           chmod 600 ~/.ssh/budgetbuddy-key.pem
           ln -sf ~/.ssh/budgetbuddy-key.pem ~/budgetbuddy-key.pem
 
+      - name: Wait for EC2 instance to be ready
+        run: |
+          max_attempts=30
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if ssh -i ~/.ssh/budgetbuddy-key.pem -o ConnectTimeout=5 -o StrictHostKeyChecking=no ec2-user@43.204.37.235 "exit" 2>/dev/null; then
+              echo "Instance is ready!"
+              exit 0
+            fi
+            echo "Attempt $attempt/$max_attempts: Waiting for instance to be ready..."
+            sleep 10
+            attempt=$((attempt + 1))
+          done
+          echo "Instance did not become ready after $max_attempts attempts"
+          exit 1
+
       - name: Run Ansible deployment
         env:
           ANSIBLE_PRIVATE_KEY_FILE: /home/runner/.ssh/budgetbuddy-key.pem
         run: |
           ansible-playbook -i ansible/inventory.ini ansible/deploy.yml
 
-      - name: Rebuild containers with latest code
+      - name: Restart containers with latest code
         run: |
-          ssh -i ~/.ssh/budgetbuddy-key.pem -o StrictHostKeyChecking=no ec2-user@43.204.37.235 \
-            "cd /opt/budgetbuddy && sudo chmod 644 .env && sudo /usr/local/bin/docker-compose down && sudo /usr/local/bin/docker-compose up -d --build"
+          ssh -i ~/.ssh/budgetbuddy-key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 ec2-user@43.204.37.235 \
+            "cd /opt/budgetbuddy && sudo /usr/local/bin/docker-compose down && sudo /usr/local/bin/docker-compose up -d"
