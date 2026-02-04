@@ -102,12 +102,6 @@
       shell: cd "{{ app_directory }}" && {{ compose_cmd }} down
       ignore_errors: yes
 
-    - name: Build Docker images (may take 5-10 minutes)
-      shell: cd "{{ app_directory }}" && {{ compose_cmd }} build
-      async: 1200
-      poll: 15
-      register: docker_build
-
     - name: Start Docker Compose services
       shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d
       register: docker_output
