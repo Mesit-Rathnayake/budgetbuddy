@@ -103,7 +103,7 @@
       ignore_errors: yes
 
     - name: Start Docker Compose services
-      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d
+      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d --build
       register: docker_output
 
     - name: Display Docker Compose output
