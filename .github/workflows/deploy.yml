@@ -55,9 +55,3 @@ jobs:
           ANSIBLE_PRIVATE_KEY_FILE: /home/runner/.ssh/budgetbuddy-key.pem
         run: |
           ansible-playbook -i ansible/inventory.ini ansible/deploy.yml
-
-      - name: Rebuild and restart containers with latest code
-        run: |
-          ssh -i ~/.ssh/budgetbuddy-key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 ec2-user@43.204.37.235 \
-            "cd /opt/budgetbuddy && sudo /usr/local/bin/docker-compose down && nohup sudo /usr/local/bin/docker-compose up -d --build > /tmp/docker-build.log 2>&1 &"
-          echo "Containers are rebuilding in background. Check http://43.204.37.235:8081 in 5-10 minutes."

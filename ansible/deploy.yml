@@ -102,8 +102,8 @@
       shell: cd "{{ app_directory }}" && {{ compose_cmd }} down
       ignore_errors: yes
 
-    - name: Start Docker Compose services
-      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d
+    - name: Build and start Docker Compose services
+      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d --build
       register: docker_output
 
     - name: Display Docker Compose output
