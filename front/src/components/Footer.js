@@ -20,7 +20,7 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors duration-200 hover:underline"
           >
-            Mesith Testing
+            Mesith Rathnayake
           </a>
 
           {/* Optional Icons */}
