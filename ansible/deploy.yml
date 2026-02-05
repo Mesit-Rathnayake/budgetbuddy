@@ -104,10 +104,15 @@
       shell: cd "{{ app_directory }}" && {{ compose_cmd }} down
       ignore_errors: yes
 
+    - name: Pull latest Docker images
+      shell: cd "{{ app_directory }}" && {{ compose_cmd }} pull
+      register: pull_output
+      timeout: 600
+
     - name: Start Docker Compose services
-      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d --build
+      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d
       register: docker_output
-      timeout: 1800
+      timeout: 300
 
     - name: Display Docker Compose output
       debug:

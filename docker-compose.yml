@@ -16,9 +16,7 @@ services:
       retries: 3
 
   backend:
-    build:
-      context: ./back
-      dockerfile: Dockerfile
+    image: ghcr.io/mesit-rathnayake/budgetbuddy-backend:latest
     container_name: myapp-backend
     ports:
       - "5000:5000"
@@ -37,9 +35,7 @@ services:
       retries: 3
 
   frontend:
-    build:
-      context: ./front
-      dockerfile: Dockerfile
+    image: ghcr.io/mesit-rathnayake/budgetbuddy-frontend:latest
     container_name: myapp-frontend
     # Bind the frontend container's port 80 to a host port. Use FRONTEND_PORT
     # environment variable to avoid conflicts with other services (e.g. Jenkins
