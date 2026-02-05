@@ -50,19 +50,20 @@ BudgetBuddy is a personal finance tracking application built to demonstrate mode
 | Tool | Purpose | Implementation |
 |------|---------|----------------|
 | **Docker** | Containerization | Multi-stage builds for frontend/backend |
-| **Docker Compose** | Local orchestration | Multi-container application management |
+| **Docker Compose** | Container orchestration | Multi-container application management |
+| **GitHub Container Registry** | Image storage | ghcr.io for built Docker image storage |
 | **Terraform** | Infrastructure as Code | AWS EC2, VPC, Security Groups provisioning |
 | **Ansible** | Configuration Management | Automated deployment and server setup |
-| **Jenkins** | CI/CD Pipeline | Automated build, test, and deployment |
+| **GitHub Actions** | CI/CD Pipeline | Build images, push to ghcr.io, trigger deploy |
 | **Kubernetes** | Container Orchestration | Production-grade container management |
-| **GitHub Actions** | Continuous Deployment | Automated deployment on code push |
 | **Git/GitHub** | Version Control | Source code management |
 
 ### Cloud Infrastructure
 - **Provider:** AWS (Amazon Web Services)
 - **Region:** ap-south-1 (Mumbai)
-- **Instance Type:** t2.micro
+- **Instance Type:** t3.micro (free tier eligible)
 - **OS:** Amazon Linux 2
+- **Build System:** GitHub Actions (offsite, free)
 
 ---
 
@@ -257,33 +258,82 @@ budgetbuddy/
 
 ## 🔄 CI/CD Pipeline
 
-### GitHub Actions Workflow
+### GitHub Actions Workflow (Optimized for Free Tier)
 
-```yaml
-Trigger: Push to main branch
+The pipeline has been optimized to **offload Docker builds from the EC2 instance** to GitHub's powerful runners, keeping the t3.micro instance stable and responsive.
+
+**Workflow Overview:**
+
+```
+Push to main branch
     ↓
-Checkout code
+[Build and Push Docker Images] (GitHub Actions)
+├─ Build backend Docker image
+├─ Build frontend Docker image  
+└─ Push both to ghcr.io (GitHub Container Registry)
     ↓
-Setup Python & Ansible
-    ↓
-Install dependencies
-    ↓
-Configure SSH keys
-    ↓
-Run Ansible deployment
-    ↓
-Rebuild containers on EC2
-    ↓
-Verify deployment
+[Deploy to AWS] (Auto-triggered)
+├─ SSH to EC2 instance
+├─ Pull latest images from ghcr.io
+├─ Start containers with docker-compose
+└─ Verify deployment
 ```
 
-### Jenkins Pipeline Stages
+**Key Components:**
 
-1. **Checkout** - Clone repository
-2. **Build** - Build Docker images
-3. **Test** - Run automated tests
-4. **Deploy** - Deploy to production
-5. **Health Check** - Verify application health
+1. **`.github/workflows/build-images.yml`** - Builds Docker images on GitHub
+   - Triggered on push to main/master
+   - Builds both backend and frontend images
+   - Pushes to `ghcr.io/mesit-rathnayake/budgetbuddy-*:latest`
+   - Duration: 5-10 minutes
+
+2. **`.github/workflows/deploy.yml`** - Deploys pre-built images
+   - Auto-triggered after build completes
+   - Runs Ansible playbook on EC2
+   - Pulls images from ghcr.io (no build)
+   - Duration: 2-3 minutes
+
+**Total Deployment Time:** ~5 minutes (vs. 23+ minutes with on-instance builds)
+
+### Why This Approach?
+
+The t3.micro instance (1GB RAM) couldn't handle building Docker images for React frontend while running MongoDB and backend services. The solution:
+- **GitHub Actions**: Free, powerful servers (~3x resources)
+- **ghcr.io**: Free GitHub Container Registry storage
+- **EC2**: Just pulls and runs (minimal load)
+- **Result**: Stable, fast, fully automated pipeline
+
+### Deployment Verification
+
+After each deployment:
+- Frontend: http://15.206.124.163:8081
+- Backend: http://15.206.124.163:5000
+- Health Check: http://15.206.124.163:5000/api/health
+
+---
+
+## 📦 Docker Image Management
+
+### GitHub Container Registry (ghcr.io)
+
+**Images Published:**
+- `ghcr.io/mesit-rathnayake/budgetbuddy-backend:latest` - Node.js backend API
+- `ghcr.io/mesit-rathnayake/budgetbuddy-frontend:latest` - React frontend (Nginx)
+
+**Image Access:**
+- Public packages (anyone can pull)
+- Located at: https://github.com/Mesit-Rathnayake?tab=packages
+- Automatically built and pushed by GitHub Actions
+
+**Local Image Building (if needed):**
+```bash
+# Build specific images
+docker build -t budgetbuddy-backend:latest ./back
+docker build -t budgetbuddy-frontend:latest ./front
+
+# Or use docker-compose
+docker-compose build --no-cache
+```
 
 ---
 
@@ -294,7 +344,7 @@ Verify deployment
 **Resources Provisioned:**
 - AWS VPC and Subnets
 - Security Groups (SSH, HTTP, Custom ports)
-- EC2 Instance (t2.micro)
+- EC2 Instance (t3.micro - free tier)
 - Elastic IP (optional)
 - IAM roles and policies
 
@@ -308,9 +358,11 @@ Verify deployment
 
 **deploy.yml** - Full application deployment
 - Install dependencies (Docker, Docker Compose, Python)
-- Clone/update repository
-- Configure environment variables
+- Clone/update repository from GitHub
+- Configure environment variables (.env)
+- **Pull latest images from ghcr.io** (no local build)
 - Start Docker Compose services
+- Run health checks
 - Setup systemd service for auto-restart
 
 **health-check.yml** - Application health monitoring
