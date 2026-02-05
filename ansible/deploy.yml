@@ -107,9 +107,7 @@
     - name: Start Docker Compose services
       shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d --build
       register: docker_output
-      timeout: 1200
-      async: 1200
-      poll: 30
+      timeout: 1800
 
     - name: Display Docker Compose output
       debug:
