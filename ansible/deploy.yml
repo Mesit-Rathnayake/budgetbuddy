@@ -109,10 +109,10 @@
       register: pull_output
       timeout: 600
 
-    - name: Start Docker Compose services
-      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d
+    - name: Start Docker Compose services (force recreate)
+      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d --force-recreate --pull always
       register: docker_output
-      timeout: 300
+      timeout: 600
 
     - name: Display Docker Compose output
       debug:
