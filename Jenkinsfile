@@ -21,61 +21,37 @@ pipeline {
             }
         }
 
-        stage('Cleanup Old Containers') {
+        stage('Docker Hub Login') {
             steps {
-                echo "🧹 Cleaning old containers..."
-                sh '''
-                    docker compose down --volumes --remove-orphans || true
-                    docker rm -f myapp-mongo myapp-backend myapp-frontend 2>/dev/null || true
-                    docker volume prune -f || true
-                '''
+                echo "🔐 Logging in to Docker Hub..."
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
+                    sh 'echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin'
+                }
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                echo "🐳 Building Docker images..."
-                sh 'docker compose build'
+                echo "🐳 Building backend image..."
+                sh 'docker build -t mesith30/budgetbuddy-backend:latest ./back'
+
+                echo "🐳 Building frontend image..."
+                sh 'docker build -t mesith30/budgetbuddy-frontend:latest ./front'
             }
         }
 
-        stage('Run Containers') {
+        stage('Push Docker Images') {
             steps {
-                echo "🚀 Starting containers..."
-                sh 'docker compose up -d'
+                echo "📤 Pushing images to Docker Hub..."
+                sh 'docker push mesith30/budgetbuddy-backend:latest'
+                sh 'docker push mesith30/budgetbuddy-frontend:latest'
             }
         }
 
-        stage('Wait for Services') {
+        stage('Deploy via Ansible') {
             steps {
-                echo "⏳ Waiting for services to be healthy..."
-                sh '''
-                    sleep 10
-                    docker compose ps
-                '''
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                echo "🏥 Performing health checks..."
-                sh '''
-                    echo "Checking MongoDB..."
-                    docker compose exec -T mongo mongosh --eval "db.adminCommand({ ping: 1 })" || true
-                    
-                    echo "Checking Backend API..."
-                    curl -f http://localhost:5000/api/health || true
-                    
-                    echo "All containers running:"
-                    docker ps
-                '''
-            }
-        }
-
-        stage('Verify Deployment') {
-            steps {
-                echo "✅ Deployment verification complete"
-                sh 'docker compose ps'
+                echo "🚀 Deploying to EC2 via Ansible..."
+                sh 'ansible-playbook -i ansible/inventory.ini ansible/deploy.yml'
             }
         }
     }
@@ -89,7 +65,6 @@ pipeline {
         }
         always {
             echo "📊 Pipeline finished!"
-            sh 'docker compose ps'
         }
     }
 }
