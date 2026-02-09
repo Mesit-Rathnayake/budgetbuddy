@@ -47,10 +47,27 @@ pipeline {
         stage('Push Docker Images') {
             steps {
                 echo "📤 Pushing images to Docker Hub..."
-                sh "docker push mesith30/budgetbuddy-backend:${env.IMAGE_TAG}"
-                sh "docker push mesith30/budgetbuddy-backend:latest"
-                sh "docker push mesith30/budgetbuddy-frontend:${env.IMAGE_TAG}"
-                sh "docker push mesith30/budgetbuddy-frontend:latest"
+                                sh '''
+                                        set -e
+                                        retry_push() {
+                                            local image="$1"
+                                            local attempts=3
+                                            local delay=10
+                                            for i in $(seq 1 $attempts); do
+                                                echo "Pushing $image (attempt $i/$attempts)..."
+                                                if docker push "$image"; then
+                                                    return 0
+                                                fi
+                                                sleep "$delay"
+                                            done
+                                            return 1
+                                        }
+
+                                        retry_push "mesith30/budgetbuddy-backend:${IMAGE_TAG}"
+                                        retry_push "mesith30/budgetbuddy-backend:latest"
+                                        retry_push "mesith30/budgetbuddy-frontend:${IMAGE_TAG}"
+                                        retry_push "mesith30/budgetbuddy-frontend:latest"
+                                '''
             }
         }
 
