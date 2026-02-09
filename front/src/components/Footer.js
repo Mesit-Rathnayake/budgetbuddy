@@ -8,7 +8,7 @@ export default function Footer() {
         
         {/* Left Side */}
         <div className="text-center sm:text-left">
-          © {new Date().getFullYear()} <span className="font-medium">BudgetBuddy</span>. All rights reserved. <span className="text-xs text-emerald-700">Pipeline OK</span>
+          © {new Date().getFullYear()} <span className="font-medium">BudgetBuddy</span>. All rights reserved.
         </div>
 
         {/* Right Side */}
