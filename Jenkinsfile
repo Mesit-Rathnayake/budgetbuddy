@@ -52,7 +52,7 @@ pipeline {
             steps {
                 echo "🚀 Deploying to EC2 via Ansible..."
                 withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'EC2_KEY_FILE', usernameVariable: 'EC2_USER')]) {
-                    sh 'ansible-playbook -i ansible/inventory.ini ansible/deploy.yml --private-key "$EC2_KEY_FILE"'
+                    sh 'ANSIBLE_PRIVATE_KEY_FILE="$EC2_KEY_FILE" ansible-playbook -i ansible/inventory.ini ansible/deploy.yml -e "ansible_ssh_private_key_file=$EC2_KEY_FILE"'
                 }
             }
         }
