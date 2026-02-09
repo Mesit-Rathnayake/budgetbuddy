@@ -32,19 +32,25 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                echo "🐳 Building backend image..."
-                sh 'docker build -t mesith30/budgetbuddy-backend:latest ./back'
+                script {
+                    env.IMAGE_TAG = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                }
 
-                echo "🐳 Building frontend image..."
-                sh 'docker build -t mesith30/budgetbuddy-frontend:latest ./front'
+                echo "🐳 Building backend image (${env.IMAGE_TAG})..."
+                sh "docker build -t mesith30/budgetbuddy-backend:${env.IMAGE_TAG} -t mesith30/budgetbuddy-backend:latest ./back"
+
+                echo "🐳 Building frontend image (${env.IMAGE_TAG})..."
+                sh "docker build -t mesith30/budgetbuddy-frontend:${env.IMAGE_TAG} -t mesith30/budgetbuddy-frontend:latest ./front"
             }
         }
 
         stage('Push Docker Images') {
             steps {
                 echo "📤 Pushing images to Docker Hub..."
-                sh 'docker push mesith30/budgetbuddy-backend:latest'
-                sh 'docker push mesith30/budgetbuddy-frontend:latest'
+                sh "docker push mesith30/budgetbuddy-backend:${env.IMAGE_TAG}"
+                sh "docker push mesith30/budgetbuddy-backend:latest"
+                sh "docker push mesith30/budgetbuddy-frontend:${env.IMAGE_TAG}"
+                sh "docker push mesith30/budgetbuddy-frontend:latest"
             }
         }
 
@@ -52,7 +58,7 @@ pipeline {
             steps {
                 echo "🚀 Deploying to EC2 via Ansible..."
                 withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'EC2_KEY_FILE', usernameVariable: 'EC2_USER')]) {
-                    sh 'ANSIBLE_PRIVATE_KEY_FILE="$EC2_KEY_FILE" ansible-playbook -i ansible/inventory.ini ansible/deploy.yml -e "ansible_ssh_private_key_file=$EC2_KEY_FILE"'
+                    sh "ANSIBLE_PRIVATE_KEY_FILE=${env.EC2_KEY_FILE} ansible-playbook -i ansible/inventory.ini ansible/deploy.yml -e \"ansible_ssh_private_key_file=${env.EC2_KEY_FILE} image_tag=${env.IMAGE_TAG}\""
                 }
             }
         }

@@ -30,7 +30,6 @@
   gather_facts: yes
   vars:
     ansible_ssh_common_args: '-o ServerAliveInterval=60 -o ServerAliveCountMax=10'
-  vars:
     ansible_python_interpreter: /usr/local/bin/python3.9
     app_directory: /opt/budgetbuddy
     git_repo: https://github.com/Mesit-Rathnayake/budgetbuddy.git
@@ -39,6 +38,7 @@
     backend_port: 5000
     mongodb_port: 27017
     compose_cmd: /usr/local/bin/docker-compose
+    image_tag: "{{ image_tag | default('latest') }}"
 
   tasks:
     # Skipping yum update for faster deployment
@@ -105,12 +105,12 @@
       ignore_errors: yes
 
     - name: Pull latest Docker images
-      shell: cd "{{ app_directory }}" && {{ compose_cmd }} pull
+      shell: cd "{{ app_directory }}" && IMAGE_TAG={{ image_tag }} {{ compose_cmd }} pull
       register: pull_output
       timeout: 600
 
     - name: Start Docker Compose services (force recreate)
-      shell: cd "{{ app_directory }}" && {{ compose_cmd }} up -d --force-recreate --pull always
+      shell: cd "{{ app_directory }}" && IMAGE_TAG={{ image_tag }} {{ compose_cmd }} up -d --force-recreate --pull always
       register: docker_output
       timeout: 600
 
