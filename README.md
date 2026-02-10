@@ -51,10 +51,11 @@ BudgetBuddy is a personal finance tracking application built to demonstrate mode
 |------|---------|----------------|
 | **Docker** | Containerization | Multi-stage builds for frontend/backend |
 | **Docker Compose** | Container orchestration | Multi-container application management |
-| **GitHub Container Registry** | Image storage | ghcr.io for built Docker image storage |
+| **Docker Hub** | Image storage | Docker Hub for built Docker image storage |
 | **Terraform** | Infrastructure as Code | AWS EC2, VPC, Security Groups provisioning |
 | **Ansible** | Configuration Management | Automated deployment and server setup |
-| **GitHub Actions** | CI/CD Pipeline | Build images, push to ghcr.io, trigger deploy |
+| **Jenkins** | CI/CD Pipeline | Build images, push to Docker Hub, trigger deploy |
+| **Ngrok** | Webhook tunnel | Expose local Jenkins to GitHub webhooks |
 | **Kubernetes** | Container Orchestration | Production-grade container management |
 | **Git/GitHub** | Version Control | Source code management |
 
@@ -63,7 +64,7 @@ BudgetBuddy is a personal finance tracking application built to demonstrate mode
 - **Region:** ap-south-1 (Mumbai)
 - **Instance Type:** t3.micro (free tier eligible)
 - **OS:** Amazon Linux 2
-- **Build System:** GitHub Actions (offsite, free)
+- **Build System:** Jenkins (local) + Docker Hub
 
 ---
 
@@ -77,17 +78,17 @@ BudgetBuddy is a personal finance tracking application built to demonstrate mode
               │ Push to main branch
               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                 GitHub Actions / Jenkins                    │
+│                    Jenkins (Local)                          │
 │              (CI/CD Pipeline Automation)                    │
 │  • Build Docker images                                      │
-│  • Run tests                                                │
+│  • Push to Docker Hub                                       │
 │  • Deploy via Ansible                                       │
 └─────────────┬───────────────────────────────────────────────┘
               │ SSH Connection
               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │            AWS EC2 Instance (15.206.124.163)                │
-│                    t2.micro - Amazon Linux 2                │
+│                    t3.micro - Amazon Linux 2                │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │         Docker Compose Environment                    │  │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │  │
@@ -258,50 +259,53 @@ budgetbuddy/
 
 ## 🔄 CI/CD Pipeline
 
-### GitHub Actions Workflow (Optimized for Free Tier)
+### Jenkins Workflow (Local + Fully Automated)
 
-The pipeline has been optimized to **offload Docker builds from the EC2 instance** to GitHub's powerful runners, keeping the t3.micro instance stable and responsive.
+The pipeline now runs in **local Jenkins** and uses **Docker Hub** for image storage. GitHub webhooks trigger Jenkins automatically via **ngrok**.
 
 **Workflow Overview:**
 
 ```
 Push to main branch
-    ↓
-[Build and Push Docker Images] (GitHub Actions)
+  ↓
+GitHub Webhook -> ngrok -> Jenkins
+  ↓
+Jenkins Pipeline
 ├─ Build backend Docker image
-├─ Build frontend Docker image  
-└─ Push both to ghcr.io (GitHub Container Registry)
-    ↓
-[Deploy to AWS] (Auto-triggered)
-├─ SSH to EC2 instance
-├─ Pull latest images from ghcr.io
-├─ Start containers with docker-compose
-└─ Verify deployment
+├─ Build frontend Docker image
+├─ Tag images with git SHA + latest
+├─ Push images to Docker Hub
+└─ Deploy to EC2 via Ansible
+  ↓
+EC2 pulls SHA-tagged images and restarts services
 ```
 
 **Key Components:**
 
-1. **`.github/workflows/build-images.yml`** - Builds Docker images on GitHub
-   - Triggered on push to main/master
-   - Builds both backend and frontend images
-   - Pushes to `ghcr.io/mesit-rathnayake/budgetbuddy-*:latest`
-   - Duration: 5-10 minutes
+1. **Jenkinsfile** - Primary CI/CD pipeline
+   - Triggered by GitHub webhook
+   - Builds backend + frontend images
+   - Tags images with git SHA and `latest`
+   - Pushes to Docker Hub (`mesith30/*`)
+   - Runs Ansible deploy on EC2
 
-2. **`.github/workflows/deploy.yml`** - Deploys pre-built images
-   - Auto-triggered after build completes
-   - Runs Ansible playbook on EC2
-   - Pulls images from ghcr.io (no build)
-   - Duration: 2-3 minutes
+2. **ngrok** - Webhook tunnel
+   - Exposes local Jenkins to GitHub
+   - Webhook URL: `https://<ngrok-id>.ngrok-free.dev/github-webhook/`
 
-**Total Deployment Time:** ~5 minutes (vs. 23+ minutes with on-instance builds)
+3. **Ansible deploy**
+   - Pulls exact image tag via `IMAGE_TAG`
+   - Recreates containers to avoid stale images
+
+**Total Deployment Time:** ~5 minutes (build + push + deploy)
 
 ### Why This Approach?
 
-The t3.micro instance (1GB RAM) couldn't handle building Docker images for React frontend while running MongoDB and backend services. The solution:
-- **GitHub Actions**: Free, powerful servers (~3x resources)
-- **ghcr.io**: Free GitHub Container Registry storage
-- **EC2**: Just pulls and runs (minimal load)
-- **Result**: Stable, fast, fully automated pipeline
+The t3.micro instance (1GB RAM) cannot build Docker images reliably. This setup keeps EC2 lightweight and stable:
+- **Jenkins**: Build and push on local machine
+- **Docker Hub**: Image registry
+- **EC2**: Pull and run only
+- **Result**: Stable, fully automated pipeline
 
 ### Deployment Verification
 
@@ -314,22 +318,21 @@ After each deployment:
 
 ## 📦 Docker Image Management
 
-### GitHub Container Registry (ghcr.io)
+### Docker Hub
 
 **Images Published:**
-- `ghcr.io/mesit-rathnayake/budgetbuddy-backend:latest` - Node.js backend API
-- `ghcr.io/mesit-rathnayake/budgetbuddy-frontend:latest` - React frontend (Nginx)
+- `mesith30/budgetbuddy-backend:latest` and `mesith30/budgetbuddy-backend:<git-sha>`
+- `mesith30/budgetbuddy-frontend:latest` and `mesith30/budgetbuddy-frontend:<git-sha>`
 
 **Image Access:**
-- Public packages (anyone can pull)
-- Located at: https://github.com/Mesit-Rathnayake?tab=packages
-- Automatically built and pushed by GitHub Actions
+- Public images on Docker Hub
+- Automatically built and pushed by Jenkins
 
 **Local Image Building (if needed):**
 ```bash
 # Build specific images
-docker build -t budgetbuddy-backend:latest ./back
-docker build -t budgetbuddy-frontend:latest ./front
+docker build -t mesith30/budgetbuddy-backend:latest ./back
+docker build -t mesith30/budgetbuddy-frontend:latest ./front
 
 # Or use docker-compose
 docker-compose build --no-cache
@@ -360,8 +363,8 @@ docker-compose build --no-cache
 - Install dependencies (Docker, Docker Compose, Python)
 - Clone/update repository from GitHub
 - Configure environment variables (.env)
-- **Pull latest images from ghcr.io** (no local build)
-- Start Docker Compose services
+- **Pull exact image tag from Docker Hub** (no local build)
+- Start Docker Compose services with `IMAGE_TAG`
 - Run health checks
 - Setup systemd service for auto-restart
 
