@@ -44,7 +44,7 @@ export default function Header() {
               onClick={() => navigate('/home')}
               className="text-2xl font-extrabold text-green-600 mr-6 hover:scale-[1.02] transition-transform"
             >
-              Mesith<span className="text-blue-600">Buddy</span>
+              Budget<span className="text-blue-600">Buddy</span>
             </button>
 
             <nav className="hidden md:flex space-x-2">
