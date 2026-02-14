@@ -1,0 +1,8 @@
+cd /opt/budgetbuddy
+sudo /usr/local/bin/docker-compose exec mongo mongosh
+
+
+show dbs
+use budget-tracker
+show collections
+db.transactions.find().limit(5)

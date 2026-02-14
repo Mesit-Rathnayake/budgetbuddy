@@ -1,0 +1,86 @@
+EC2 DATABASE COMMANDS
+=====================
+
+These commands can be run on the EC2 instance to view and interact with the MongoDB database.
+
+BASIC DATABASE QUERIES
+======================
+
+1. View recent transactions (limit 5):
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.transactions.find().limit(5).pretty()"
+
+2. View all users:
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.users.find().pretty()"
+
+3. View all goals:
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.goals.find().pretty()"
+
+4. View all settings:
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.settings.find().pretty()"
+
+5. Count total transactions:
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.transactions.countDocuments()"
+
+6. Count total users:
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.users.countDocuments()"
+
+INTERACTIVE MONGOSH SESSION
+============================
+
+To enter interactive MongoDB shell:
+   sudo /usr/local/bin/docker-compose exec mongo mongosh
+
+Then in the shell:
+   use budget-tracker
+   db.transactions.find()
+   db.users.find()
+   db.goals.find()
+   db.settings.find()
+   exit
+
+CONTAINER STATUS CHECKS
+=======================
+
+1. Check MongoDB container status:
+   sudo docker ps | grep mongo
+
+2. View MongoDB logs:
+   sudo /usr/local/bin/docker-compose logs mongo
+
+3. Check all running containers:
+   sudo /usr/local/bin/docker-compose ps
+
+4. Verify image SHA:
+   sudo docker inspect myapp-frontend --format 'ImageID: {{.Image}}'
+   sudo docker inspect myapp-backend --format 'ImageID: {{.Image}}'
+
+DATABASE ADMIN OPERATIONS
+==========================
+
+1. Ping MongoDB to verify connectivity:
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "db.adminCommand({ ping: 1 })"
+
+2. View database statistics:
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.stats()"
+
+3. Drop a collection (be careful!):
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.transactions.drop()"
+
+4. Drop entire database (be careful!):
+   sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.dropDatabase()"
+
+USEFUL ALIASES TO ADD TO ~/.bashrc
+====================================
+
+Add these to /home/ec2-user/.bashrc for quick access:
+
+alias mongo-shell='sudo /usr/local/bin/docker-compose exec mongo mongosh'
+alias mongo-transactions='sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.transactions.find().pretty()"'
+alias mongo-users='sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.users.find().pretty()"'
+alias mongo-count='sudo /usr/local/bin/docker-compose exec mongo mongosh --eval "use budget-tracker; db.transactions.countDocuments()"'
+
+Then you can just run:
+   mongo-shell
+   mongo-transactions
+   mongo-users
+   mongo-count
