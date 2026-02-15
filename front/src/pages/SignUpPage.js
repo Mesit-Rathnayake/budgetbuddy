@@ -62,7 +62,7 @@ export default function SignUpPage() {
         {/* Right column (form) */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
           <h2 className="text-3xl font-bold text-gray-800 mb-3">
-            Join Us Today
+            Mesith
           </h2>
           <p className="text-gray-500 mb-8">
             Create your account and start managing your budgets
