@@ -107,6 +107,24 @@
       shell: cd "{{ app_directory }}" && {{ compose_cmd }} down
       ignore_errors: yes
 
+    - name: Prune dangling and unused Docker images
+      shell: docker image prune -af
+      ignore_errors: yes
+
+    - name: Prune Docker builder cache
+      shell: docker builder prune -af
+      ignore_errors: yes
+
+    - name: Check free space on root filesystem (KB)
+      shell: df -Pk / | awk 'NR==2 {print $4}'
+      register: root_free_kb
+      changed_when: false
+
+    - name: Ensure enough disk space before pulling images
+      fail:
+        msg: "Insufficient free space on '/': {{ root_free_kb.stdout }} KB available. Need at least 1048576 KB (1 GB) before docker pull. Clean disk space or expand EC2 volume."
+      when: (root_free_kb.stdout | int) < 1048576
+
     - name: Pull latest Docker images
       shell: cd "{{ app_directory }}" && IMAGE_TAG={{ image_tag }} {{ compose_cmd }} pull
       register: pull_output
