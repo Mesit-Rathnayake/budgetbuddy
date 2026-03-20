@@ -44,9 +44,12 @@
     # Skipping yum update for faster deployment
     # Run manually if security updates needed: sudo yum update -y
     
-    - name: Install required packages
-      raw: sudo yum install -y docker git
-      changed_when: false
+    - name: Install required packages without upgrading existing ones
+      yum:
+        name:
+          - docker
+          - git
+        state: present
 
     - name: Install Docker SDK for Python (no compose)
       pip:
