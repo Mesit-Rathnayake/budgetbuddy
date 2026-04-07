@@ -3,6 +3,8 @@
 .env.local
 .env.production
 *.env
+back/.env
+front/.env
 
 # Terraform
 *.tfstate
@@ -17,6 +19,8 @@ terraform.tfvars
 *.retry
 ansible/*.retry
 .ansible/
+ansible/inventory.ini
+!ansible/inventory.example.ini
 
 # Python
 __pycache__/
@@ -48,12 +52,16 @@ package-lock.json
 *.log
 logs/
 *.log.*
+backend_logs.txt
+frontend_logs.txt
 
 # Docker
 .dockerignore
 
 # Kubernetes
 *.kubeconfig
+k8s/secrets.yaml
+!k8s/secrets.example.yaml
 
 # AWS
 .aws/
